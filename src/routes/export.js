@@ -5,6 +5,7 @@ const router = express();
 
 router.post('/', controller.run);
 router.get('/:instance', controller.listByInstance);
+router.get('/:instance/:iteration', controller.getDownloadURLFromInstanceAndIteration);
 
 module.exports = router;
 

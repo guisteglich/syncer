@@ -15,7 +15,11 @@ const init = async () => {
   );
   `;
 
-  await db.query(sql);
+  try {
+    await db.query(sql);
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 module.exports = {

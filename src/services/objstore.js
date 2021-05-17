@@ -25,9 +25,16 @@ const get = async (bucket, name, path) => {
   return await minio.fGetObject(bucket, name, path)
 }
 
+const getDownloadURL = async (bucket, name) => {
+  // 1 day timeout
+  const timeout = 86400;
+  return await minio.presignedGetObject(bucket, name, timeout);
+}
+
 // Colocar o content-type
 
 module.exports = {
   put,
-  get
+  get,
+  getDownloadURL
 }

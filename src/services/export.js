@@ -27,7 +27,7 @@ const listByInstance = async (instance) => {
   return result
 }
 
-const resolveExportName = (iteration) => `${config.instance}.${iteration}.tgz`;
+const resolveExportName = (instance, iteration) => `${instance}.${iteration}.tgz`;
 
 // (C=clonagem, E=export, I=import)
 const createControlRecord = async(iteration) => {
@@ -86,7 +86,7 @@ const run = async () => {
     console.log(`creating sync packet`)
     const packetPath = await createSyncPacket()
     console.log(`uploading to object storage`);;
-    const ret = await objstore.put('exports', resolveExportName(nextExport), packetPath)
+    const ret = await objstore.put(config.minio.exportsBucket, resolveExportName(config.instance, nextExport), packetPath)
     console.log(ret)
     console.log("Removing local copy of sync packet")
     await fs.unlink(packetPath)
@@ -112,6 +112,10 @@ const run = async () => {
   
 }
 
+const getDownloadURLFromInstanceAndIteration = async (instance, iteration) => {
+  return await objstore.getDownloadURL(config.minio.exportsBucket, resolveExportName(instance, iteration))
+}
+
 // const _main = async() => {
 //   const res = await listByInstance("IES")
 //   console.log(res)
@@ -124,5 +128,6 @@ module.exports = {
   getNextExport,
   resolveExportName,
   run,
-  listByInstance
+  listByInstance,
+  getDownloadURLFromInstanceAndIteration,
 };

@@ -25,11 +25,6 @@ const listByInstance = async (req, res) => {
 
   try {
     const exports = await service.listByInstance(instance)
-
-    for (o of exports) {
-      o.path = `/${o.instance}/${o.iteration}`
-    }
-    
     res.json(exports)
   } catch(error) {
     res.status(500).json({ success: false, message: error.message });
@@ -37,11 +32,17 @@ const listByInstance = async (req, res) => {
   }
 }
 
-const getByInstanceAndIteration = async (req, res) => {
+const getDownloadURLFromInstanceAndIteration = async (req, res) => {
+  const instance = req.params.instance;
+  const iteration = req.params.iteration;
+  
+  const url = await service.getDownloadURLFromInstanceAndIteration(instance, iteration);
 
+  res.json({ success: true, url });
 }
 
 module.exports = {
   run,
   listByInstance,
+  getDownloadURLFromInstanceAndIteration,
 };

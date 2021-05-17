@@ -10,6 +10,8 @@ const config = {
     host: process.env.MINIO_HOST,
     key: process.env.MINIO_ACCESS_KEY,
     secret: process.env.MINIO_ACCESS_KEY_SECRET,
+    exportsBucket: 'exports',
+    importsBucket: 'imports',
   },
   db: {
     user: process.env.DB_USER,

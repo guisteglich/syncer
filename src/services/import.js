@@ -7,12 +7,6 @@ const objstore = require('./objstore')
 
 const db = new Pool(config.db)
 
-
-const getNextImport = async() => {
-  const lastImport = await getLastImport()
-  return lastImport + 1;
-}
-
 const getLastImport = async() => {
   const sql = `SELECT max(iteration) FROM avapolos_sync WHERE instance='${config.instance}' AND operation='I'`;
   const result = (await db.query(sql)).rows[0].max;
@@ -21,26 +15,27 @@ const getLastImport = async() => {
   return result
 }
 
+const getNextImport = async() => {
+  const lastImport = await getLastImport()
+  return lastImport + 1;
+}
+
+const resolveImportName = (instance, iteration) => `${instance}.${iteration}.tgz`;
+
 const run = async () => {
   console.log('importing')  
-  // const nextImport = await getNextImport()
-  const nextImport = 50
+  const nextImport = await getNextImport()
+  const importName = resolveImportName(config.instance, nextImport);
+  const tmpImportPath = `${__dirname}/import.tgz`;
+
+  // const nextImport = 50
   console.log(`next iteration: ${nextImport}`)
 
-  try {
-    await objstore.get('exports', `${config.instance}.${nextImport}.tgz`, `${__dirname}/import.tgz`)
-  } catch (error) {
-    if (error.message == "Not Found") {
-      console.log('sync packet not found, aborting import.')
-    } else {
-      throw error
-    }
-  }
+  if (! await objstore.has(config.minio.importsBucket, importName)) throw new Error('import archive was not found');
 
-  // atualizar db sync com o database do pacote de sincronização
+  await objstore.get(config.minio.importsBucket, importName, tmpImportPath);
 
-  // rsync moodledata filedir
-
+  
 
 }
 

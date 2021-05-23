@@ -25,6 +25,15 @@ const get = async (bucket, name, path) => {
   return await minio.fGetObject(bucket, name, path)
 }
 
+const has = async(bucket, name) => {
+  try {
+    await minio.statObject(bucket, name)
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const getDownloadURL = async (bucket, name) => {
   // 1 day timeout
   const timeout = 86400;
@@ -36,5 +45,6 @@ const getDownloadURL = async (bucket, name) => {
 module.exports = {
   put,
   get,
+  has,
   getDownloadURL
 }

@@ -25,6 +25,10 @@ const get = async (bucket, name, path) => {
   return await minio.fGetObject(bucket, name, path)
 }
 
+const getStream = async (bucket, name) => {
+  return await minio.getObject(bucket, name)
+}
+
 const has = async(bucket, name) => {
   try {
     await minio.statObject(bucket, name)
@@ -45,6 +49,7 @@ const getDownloadURL = async (bucket, name) => {
 module.exports = {
   put,
   get,
+  getStream,
   has,
   getDownloadURL
 }

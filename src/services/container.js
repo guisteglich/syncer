@@ -1,5 +1,4 @@
 const Docker = require('dockerode');
-const Container = require('dockerode/lib/container');
 
 const docker = new Docker({ socketPath: "/var/run/docker.sock" })
 
@@ -24,7 +23,7 @@ const stop = async (containerName) => {
 
 const start = async (containerName) => {
   const container = docker.getContainer((await getByName(containerName)).Id);
-    try {
+  try {
     await container.start()
   } catch (error) {
     if (error.reason == 'container already started') return
@@ -32,8 +31,15 @@ const start = async (containerName) => {
   }
 }
 
+const restart = async (containerName) => {
+  const container = docker.getContainer((await getByName(containerName)).Id);
+  await container.restart();
+}
+
 const getVolumeMountpointByContainer = async (containerName, volumePath) => {
   const container = await getByName(containerName);
+
+  console.log(container)
   const found = container.Mounts.find((mount) => mount.Destination == volumePath)
   if (!found) throw Error(`ContainerError: volume with internal path ${volumePath} not found.`)
 
@@ -47,8 +53,54 @@ const getIpByName = async (name) => {
   return networks[Object.keys(networks)[0]].IPAddress
 }
 
+function runExec(container) {
+
+  var options = {
+    Cmd: ['bash', '-c', 'echo test $VAR'],
+    Env: ['VAR=ttslkfjsdalkfj'],
+    AttachStdout: true,
+    AttachStderr: true
+  };
+
+  container.exec(options, function(err, exec) {
+    if (err) return;
+    exec.start(function(err, stream) {
+      if (err) return;
+
+      container.modem.demuxStream(stream, process.stdout, process.stderr);
+
+      exec.inspect(function(err, data) {
+        if (err) return;
+        console.log(data);
+      });
+    });
+  });
+}
+
+const runCommand = async(containerName, command) => {
+  const container = docker.getContainer((await getByName(containerName)).Id);
+  const execOptions = {
+    Cmd: command,
+    AttachStdout: true,
+    AttachStderr: true,
+  };
+
+  container.exec(execOptions, (err, exec) => {
+    if (err) throw err;
+    exec.start((err, stream) => {
+      if (err) throw err;
+      container.modem.demuxStream(stream, process.stdout, process.stderr);
+
+      exec.inspect((err, data) => {
+        if (err) throw err;
+        return data;
+      })
+    })
+  })
+}
+
 // const _main = async() => {
-//   console.log(await getIpByName("db_ies"))
+//   console.log(await runCommand("moodle", [ "ls" ]))
 // }
 
 // _main()
@@ -57,6 +109,8 @@ module.exports = {
   getByName,
   start,
   stop,
+  restart,
   getVolumeMountpointByContainer,
   getIpByName,
+  runCommand,
 };

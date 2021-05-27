@@ -25,24 +25,33 @@ const listByInstance = async (req, res) => {
 
   try {
     const exports = await service.listByInstance(instance)
-    res.json(exports)
+    res.json({ success: true, exports })
   } catch(error) {
     res.status(500).json({ success: false, message: error.message });
     console.log(error)
   }
 }
 
-const getDownloadURLFromInstanceAndIteration = async (req, res) => {
+/**
+ * @param  {} req
+ * @param  {import('express').Response} res
+ */
+const getExportFromInstanceAndIteration = async (req, res) => {
   const instance = req.params.instance;
   const iteration = req.params.iteration;
   
-  const url = await service.getDownloadURLFromInstanceAndIteration(instance, iteration);
-
-  res.json({ success: true, url });
+  try {
+    const stream = await service.getExportFromInstanceAndIteration(instance, iteration);
+    res.attachment(`${instance}-${iteration}.tgz`);
+    stream.pipe(res);
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Ocorreu um erro inesperado, tente novamente mais tarde.' })
+    console.log(e)
+  }
 }
 
 module.exports = {
   run,
   listByInstance,
-  getDownloadURLFromInstanceAndIteration,
+  getExportFromInstanceAndIteration,
 };

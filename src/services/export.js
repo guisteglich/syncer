@@ -2,7 +2,7 @@ const compressing = require('compressing');
 const fs = require('fs-extra');
 const { nanoid } = require('nanoid');
 
-const { client:db } = require('../db');
+const { client:db, waitForHealthy } = require('../db');
 const container = require('./container');
 const objstore = require('./objstore');
 const config = require('../config')
@@ -55,7 +55,7 @@ const copyMoodleDataFiledir = async (tmpPath) => {
 
 const createSyncPacket = async () => {
   const id = nanoid(6);
-  const tmpPath = `${__dirname}/tmp/${id}`;
+  const tmpPath = `/tmp/avapolos_syncer${id}`;
   const source = `${tmpPath}/`;
   const dest = `${__dirname}/${id}.tgz`;
 
@@ -95,13 +95,15 @@ const run = async () => {
     await container.start(config.replication.main);
     await container.start(config.replication.sync);
 
-    
-    setTimeout(async () => {
-      console.log('waiting for BDR')
+    console.log('waiting for BDR')
+
+    waitForHealthy(async () => {
       await db.query("SELECT bdr.wait_slot_confirm_lsn(NULL, NULL)");
       console.log('stopping sync db')
       container.stop(config.replication.sync);
-    }, 3000)
+      return;
+    })
+    
   } catch(error) {
     console.log('an error ocurred, starting main db and stopping sync')
     await container.stop(config.replication.sync)
@@ -112,8 +114,8 @@ const run = async () => {
   
 }
 
-const getDownloadURLFromInstanceAndIteration = async (instance, iteration) => {
-  return await objstore.getDownloadURL(config.minio.exportsBucket, resolveExportName(instance, iteration))
+const getExportFromInstanceAndIteration = async (instance, iteration) => {
+  return await objstore.getStream(config.minio.exportsBucket, resolveExportName(instance, iteration))
 }
 
 // const _main = async() => {
@@ -129,5 +131,5 @@ module.exports = {
   resolveExportName,
   run,
   listByInstance,
-  getDownloadURLFromInstanceAndIteration,
+  getExportFromInstanceAndIteration,
 };

@@ -14,7 +14,7 @@ services:
     container_name: main-db
     image: avapolos/postgres-bdr:latest
     ports:
-      - 5432:5432
+      - 5431:5431
     environment:
      - POSTGRES_PASSWORD=L5Pojz33jND5
      - APP_USER=moodle
@@ -88,7 +88,7 @@ services:
 
   minio:
     container_name: minio
-    image: minio/minio:RELEASE.2021-04-18T19-26-29Z
+    image: minio/minio:latest
     volumes:
       - minio:/data
     ports:
